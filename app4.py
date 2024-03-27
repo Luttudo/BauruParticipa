@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -19,21 +19,21 @@ class Opcao(db.Model):
 
 @app.route('/api/enquetes', methods=['POST'])
 def criar_enquete():
-    if not request.json or not 'titulo' in request.json:
+    if not request.json or 'titulo' not in request.json:
         abort(400)
     enquete = Enquete(titulo=request.json['titulo'], descricao=request.json.get('descricao', ""))
     db.session.add(enquete)
     db.session.commit()
     return jsonify({'enquete': enquete.id}), 201
 
-    # Criar Enquete
+    # 1 Criar Enquete
 
 @app.route('/api/enquetes', methods=['GET'])
 def listar_enquetes():
     enquetes = Enquete.query.all()
     return jsonify({'enquetes': [enquete.id for enquete in enquetes]})
 
-    # Listar Enquetes
+    # 2 Listar Enquetes
 
 @app.route('/api/enquetes/<id>', methods=['GET'])
 def obter_detalhes_enquete(id):
@@ -42,11 +42,11 @@ def obter_detalhes_enquete(id):
         abort(404)
     return jsonify({'titulo': enquete.titulo, 'descricao': enquete.descricao})
 
-    # Obter detalhes de uma enquete
+    # 3 Obter detalhes de uma enquete
 
 @app.route('/api/enquetes/<id>/votar', methods=['POST'])
 def votar_opcao_enquete(id):
-    if not request.json or not 'opcao_id' in request.json:
+    if not request.json or 'opcao_id' not in request.json:
         abort(400)
     opcao = Opcao.query.filter_by(id=request.json['opcao_id'], enquete_id=id).first()
     if opcao is None:
@@ -55,7 +55,7 @@ def votar_opcao_enquete(id):
     db.session.commit()
     return jsonify({'votos': opcao.votos}), 200
 
-    # Votar em uma opção de enquete
+    # 4 Votar em uma opção de enquete
 
 @app.route('/api/enquetes/<id>/resultados', methods=['GET'])
 def resultados_enquete(id):
@@ -65,7 +65,7 @@ def resultados_enquete(id):
     resultados = {opcao.descricao: opcao.votos for opcao in opcoes}
     return jsonify(resultados)
 
-    # Resultados de uma enquete
+    # 5 Resultados de uma enquete
 
 @app.route('/api/enquetes/<id>/opcoes', methods=['GET'])
 def visualizar_opcoes_enquete(id):
@@ -74,18 +74,18 @@ def visualizar_opcoes_enquete(id):
         abort(404)
     return jsonify({'opcoes': [opcao.descricao for opcao in opcoes]})
 
-    # Visualizar opções de uma enquete
+    # 6 Visualizar opções de uma enquete
 
 @app.route('/api/enquetes/<id>/opcoes', methods=['POST'])
 def adicionar_opcao_enquete(id):
-    if not request.json or not 'descricao' in request.json:
+    if not request.json or 'descricao' not in request.json:
         abort(400)
     opcao = Opcao(enquete_id=id, descricao=request.json['descricao'])
     db.session.add(opcao)
     db.session.commit()
     return jsonify({'opcao': opcao.id}), 201
 
-    # Adicionar a opção em uma enquete
+    # 7 Adicionar a opção em uma enquete
 
 @app.route('/api/enquetes/<id>', methods=['DELETE'])
 def deletar_enquete(id):
@@ -96,7 +96,7 @@ def deletar_enquete(id):
     db.session.commit()
     return jsonify({'resultado': True})
 
-    # Deletar enquete
+    # 8 Deletar enquete
 
 @app.route('/api/enquetes/<id_enquete>/opcoes/<id_opcao>', methods=['DELETE'])
 def deletar_opcao_enquete(id_enquete, id_opcao):
@@ -107,6 +107,4 @@ def deletar_opcao_enquete(id_enquete, id_opcao):
     db.session.commit()
     return jsonify({'resultado': True})
 
-    # Deletar uma opção de uma enquete
-
-
+    # 9 Deletar uma opção de uma enquete
